@@ -22,19 +22,22 @@ end
 local msgs = {}
 
 msgs = {
-	"Don't hesitate to ask the staff any questions, they are here to help.",
-	"Type !rtv to force a mapchange.",
-	"Type !crosshair to customize your crosshair settings and achieve different designs.",
-	"Type !help or press F1 for help and information about the gamemode.",
-	"Change the position of the HUD by pressing F2 or typing !settings.",
-	"Change how long player names stay on the screen by pressing F2 or typing !settings.",
-	"Buttons are claimed automatically. Just walk up to them!",
-	"Did you know the weapons have recoil patterns? Pull down gently to concentrate your spray!",
-	"Too many squeakers? Mute players from the scoreboard by holding TAB.",
-	"Disable these messages through the !settings menu or by pressing F2.",
-	"Enable Thirdperson, disable Autojump, change HUD position and more by pressing F2.",
-	"Change your HUD theme in the F2 menu.",
-	"Disconnecting while on the Death team is not allowed and will be considered death avoidance. You will be forced to play 1 extra rounds as Death.",
+	"Não hesite em pedir ajuda à staff, eles estão aqui para isso.",
+	"Escreva !rtv para votar para a mudar o mapa.",
+	"Escreva !crosshair para personalizar sua mira",
+	"Mude a posição e o estilo do HUD apertando F2 ou escrevendo !settings.",
+	"Mude por quanto tempo o nome dos players ficam na tela apertnado F2 ou escrevendo !settings.",
+	"Botões são reservados automaticamente, só ande até eles!",
+	"Sabia que as armas possuem padrões de tiro? Puxe a arma um pouco pra baixo ao atirar!",
+	"Muta gente falando? Mute players apertando TAB.",
+	"Desative estas mensagens apertando F2 ou escrevendo !settings",
+	"Ative a terceira pessoa escrevendo !3p (e desative escrevendo !1p).",
+	"Veja os recordes do mapa escrevendo !recordes",
+	"Desconectar enquanto estiver nos Death não é permitido, e resultará em jogar mais um round como death!",
+	"Cada arma melee conta com alguma propriedade expecial. Explore-as, algumas são muito boas!",
+	"Criei uma interface nova para quem gosta de pegar recordes, se você nao liga para isso, pode voltar para a antiga no menu F2.",
+	"O Preço das facas é proporcional ao preço real delas e é atualizado semanalmente.",
+	"As áreas pintadas são colocadas para evitar que players usem bugs nos mapas. Cuidado!",
 }
 
 function DR:AddAnnouncement( ann )

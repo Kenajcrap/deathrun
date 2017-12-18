@@ -6,14 +6,25 @@ print("Loading Statistics...")
 if SERVER then
 
 	-- record timings
-	--sql.Query("DROP TABLE deathrun_records")
+	--lua_run sql.Query( "UPDATE deathrun_stats SET type = 'safira' WHERE sid = 'pa'" )
 	sql.Query("CREATE TABLE IF NOT EXISTS deathrun_records ( sid64 STRING, mapname STRING, seconds REAL )")
+	sql.Query("CREATE TABLE IF NOT EXISTS deathrun_medals ( mapname STRING, type STRING, seconds REAL, reward REAL )")
 
 	hook.Add("DeathrunPlayerFinishMap", "DeathrunMapRecords", function( ply, zname, zone, place, seconds )
 		local sid64 = ply:SteamID64()
 		local mapname = game.GetMap()
 
 		sql.Query("INSERT INTO deathrun_records VALUES ('"..sid64.."', '"..mapname.."', "..tostring(seconds)..")")
+	end)
+
+	hook.Add("DeathrunPlayerFinishMap", "DeathrunPlayerGetMedal", function ( ply, zname, zone, place, seconds )
+		for k, v in ipairs(res3) do
+			if seconds <= tonumber(v["seconds"]) then
+				hook.Call("DeathrunPlayerGetMedal", nil, ply, v["type"], v["reward"])
+				sound.Play("cb_sounds/crystal_collect.wav" , ply:GetPos())
+			break
+			end
+		end
 	end)
 
 	local endmap = nil
@@ -38,7 +49,23 @@ if SERVER then
 
 		-- deathrun_send_map_records
 		--
-		res = sql.Query("SELECT * FROM deathrun_records WHERE mapname = '"..game.GetMap().."' ORDER BY seconds ASC LIMIT 3")
+		res = sql.Query("SELECT * FROM deathrun_records WHERE mapname = '"..game.GetMap().."' ORDER BY seconds ASC LIMIT 5")
+
+		local best = res or {[1] = {["seconds"] = 0}}
+
+
+
+		if sql.Query("SELECT * FROM deathrun_medals WHERE mapname = '"..game.GetMap().."' AND type = 'Platina'") == nil then
+			sql.Query("INSERT INTO deathrun_medals (mapname, type, seconds, reward) VALUES ('"..game.GetMap().."', 'Platina', "..best[1]["seconds"]..", 100)")
+		else
+			sql.Query("UPDATE deathrun_medals SET seconds = "..best[1]["seconds"].." WHERE type = 'Platina'")
+		end
+
+
+		res3 = sql.Query("SELECT * FROM deathrun_medals WHERE mapname = '"..game.GetMap().."' ORDER BY seconds ASC LIMIT 5")
+
+		print("Medalhas:")
+		PrintTable(res3)
 
 		--PrintTable( endmap )
 		if endmap ~= nil and res ~= false then
@@ -57,7 +84,7 @@ if SERVER then
 		end
 
 		for k,ply in ipairs(player.GetAll()) do
-			res2 = sql.Query("SELECT * FROM deathrun_records WHERE mapname = '"..game.GetMap().."' AND sid64 = '"..ply:SteamID64().."' ORDER BY seconds ASC LIMIT 3")
+			res2 = sql.Query("SELECT * FROM deathrun_records WHERE mapname = '"..game.GetMap().."' AND sid64 = '"..ply:SteamID64().."' ORDER BY seconds ASC LIMIT 5")
 			if endmap ~= nil and res2 ~= false then
 				local seconds = -1
 				if res2 ~= nil then
@@ -72,6 +99,33 @@ if SERVER then
 				net.WriteFloat( seconds )
 				net.Send( ply )
 			end
+		end
+
+		if endmap ~= nil and res3 ~= false then-- send medals
+			if res3 == nil then
+				res3 = {}
+			end
+			net.Start("deathrun_send_map_medals")
+			net.WriteString( util.TableToJSON( res3 ) )
+			net.Broadcast()
+		end
+
+		for k,ply in ipairs(player.GetAll()) do --check personal multipliers
+			res4 = sql.Query( "SELECT * FROM deathrun_stats WHERE sid = '"..ply:SteamID().."'" )
+			local pmulti = 1
+
+			if res ~= {} and res ~= nil then
+				if res[1]["sid64"] == ply:SteamID64() then --Recordist
+					pmulti = pmulti + 0.5
+				end
+			end
+
+
+			sql.Query( "UPDATE deathrun_stats SET pmultiplier = "..pmulti.." WHERE sid = '"..ply:SteamID().."'" )
+
+			net.Start("deathrun_send_multiplier")
+			net.WriteFloat( pmulti )
+			net.Send( ply )
 		end
 
 	end)
@@ -115,12 +169,12 @@ if SERVER then
 	end
 
 
-	sql.Query( "CREATE TABLE deathrun_stats ( sid STRING, kills INTEGER, deaths INTEGER, runner_wins INTEGER, death_wins INTEGER )" )
+	sql.Query( "CREATE TABLE deathrun_stats ( sid STRING, kills INTEGER, deaths INTEGER, runner_wins INTEGER, death_wins INTEGER, pmultiplier REAL)" )
 
 	hook.Add("PlayerAuthed", "CreateStatsRow", function( ply, steamid, uid )
 		local res = sql.Query( "SELECT * FROM deathrun_stats WHERE sid = '"..steamid.."'" )
 		if not res then
-			res = sql.Query( "INSERT INTO deathrun_stats VALUES ( '"..steamid.."', 0, 0, 0, 0 )" )
+			res = sql.Query( "INSERT INTO deathrun_stats VALUES ( '"..steamid.."', 0, 0, 0, 0, 1 )" )
 		end
 
 		res = sql.Query( "SELECT * FROM deathrun_stats WHERE sid = '"..steamid.."'" )
@@ -236,7 +290,10 @@ if SERVER then
 	util.AddNetworkString("deathrun_send_stats")
 	util.AddNetworkString("deathrun_display_stats")
 	util.AddNetworkString("deathrun_send_map_records")
+	util.AddNetworkString("deathrun_send_map_medals")
+	util.AddNetworkString("deathrun_send_map_records_chat")
 	util.AddNetworkString("deathrun_send_map_pb")
+	util.AddNetworkString("deathrun_send_multiplier")
 
 
 end
@@ -247,14 +304,42 @@ if CLIENT then
 	DR.MapRecordsCache = {}
 	DR.MapPBCache = 0
 
+	net.Receive("deathrun_send_map_records_chat",function ()
 
+		DR.MapRecordsCacheChat = util.JSONToTable( net.ReadString())
+
+		if DR.MapRecordsCacheChat ~= nil then
+
+			DR:ChatMessage("Recordes:")	
+			for i = 1, #DR.MapRecordsCacheChat do
+				DR:ChatMessage (i.."- ["..string.FormattedTime(tonumber(DR.MapRecordsCacheChat[i]["seconds"],10),"%01i:%02i;%02i").."] - "..DR.MapRecordsCacheChat[i]["nickname"]..".")
+			end
+
+		end
+	end)
 
 	net.Receive("deathrun_send_map_records", function()
 		DR.MapRecordsDrawPos = net.ReadVector()
-		DR.MapRecordsCache = util.JSONToTable( net.ReadString() )
+		DR.MapRecordsCache = util.JSONToTable( net.ReadString())
 
 		print("Records Pos",DR.MapRecordsDrawPos)
 		PrintTable( DR.MapRecordsCache )
+		
+	end)
+
+	local records3d = {
+	ang = Angle(0,0,0),
+	born = 0,
+	panelnumb = 0,
+	}
+
+	net.Receive("deathrun_send_map_medals", function()
+		DR.MapMedalsCache = util.JSONToTable( net.ReadString())
+
+		PrintTable( DR.MapMedalsCache )
+
+		records3d.born = CurTime()
+		
 	end)
 
 	net.Receive("deathrun_send_map_pb", function()
@@ -283,7 +368,7 @@ if CLIENT then
 	Runner Wins: ]]..tostring(t[1]["runner_wins"])..[[
 
 	Death Wins: ]]..tostring(t[1]["death_wins"])..[[
-]]
+	]]
 
 		DR:ChatMessage( msg )
 	end)
@@ -356,15 +441,30 @@ if CLIENT then
 	})
 
 	
+	local records3d = {
+	ang = Angle(0,0,0),
+	born = 0,
+	panelnumb = 0,
+	}
+
+	records3d.born = CurTime()
+
+	local medalicons = {}
+	medalicons["PLATINA"] = Material("cb3_keys/cb3_platinum_relic_64.png")
+	medalicons["OURO"] = Material("cb3_keys/cb3_gold_relic_64.png")
+	medalicons["SAFIRA"] = Material("cb3_keys/cb3_saphire_relic_64.png")
+	medalicons["BRONZE"] = Material("cb3_keys/cb3_bronze_relic_64.png")
+	medalicons["OUTRO"] = Material("icon16/star.png")
+	
 
 	hook.Add( "PostDrawTranslucentRenderables", "statsdisplay", function()
 	
 		local delay = 0.45
-		local lifetime = 10 + delay
+		local lifetime = 3 + delay
 
-		local t = CurTime()-( stats3d.born + delay )
+		local tstats = CurTime()-( stats3d.born + delay )
 
-		if t < lifetime then
+		if tstats < lifetime then
 			h = 80 + 75 * #labels
 
 			cam.Start3D2D( stats3d.pos, stats3d.ang, 0.04 )
@@ -379,10 +479,10 @@ if CLIENT then
 				render.SetStencilReferenceValue(1)
 
 				surface.SetDrawColor(Color(0, 0, 0, 255))
-				if t < lifetime-1 then
-					surface.DrawRect(x,y,w,h*QuadLerp( math.Clamp( InverseLerp(t,0,1), 0, 1 ), 0, 1 ) )
+				if tstats < lifetime-1 then
+					surface.DrawRect(x,y,w,h*QuadLerp( math.Clamp( InverseLerp(tstats,0,1), 0, 1 ), 0, 1 ) )
 				else
-					surface.DrawRect(x,y,w, h*QuadLerp( math.Clamp( InverseLerp( t, lifetime-1, lifetime ), 0, 1 ), 1, 0 ) )
+					surface.DrawRect(x,y,w, h*QuadLerp( math.Clamp( InverseLerp( tstats, lifetime-1, lifetime ), 0, 1 ), 1, 0 ) )
 				end
 
 				render.SetStencilCompareFunction(STENCILCOMPARISONFUNCTION_EQUAL)
@@ -413,6 +513,9 @@ if CLIENT then
 			cam.End3D2D()
 		end
 
+
+		local trecords = CurTime()-( records3d.born + delay )
+
 		if DR.MapRecordsDrawPos ~= Vector(0,0,0) and DR.MapRecordsDrawPos ~= nil then
 			local dist = LocalPlayer():GetPos():Distance( DR.MapRecordsDrawPos )
 			if dist < 1000 then
@@ -429,46 +532,96 @@ if CLIENT then
 				--local scale = math.Clamp( InverseLerp( dist, 1000, 400 ), 0,1) * 0.12
 
 				--if dist < 20 then
-					local recordsAng = LocalPlayer():EyeAngles()
-					recordsAng:RotateAroundAxis( LocalPlayer():EyeAngles():Right(), 90 )
-					recordsAng:RotateAroundAxis( LocalPlayer():EyeAngles():Forward(), 90 )
-					recordsAng.roll = 90
-				--end
 
-				cam.Start3D2D( DR.MapRecordsDrawPos, recordsAng, 0.10 )
+
+					records3d.ang = LocalPlayer():EyeAngles()
+					records3d.ang:RotateAroundAxis( LocalPlayer():EyeAngles():Right(), 90 )
+					records3d.ang:RotateAroundAxis( LocalPlayer():EyeAngles():Forward(), 90 )
+					records3d.ang.roll = 90
 					
-					surface.SetDrawColor( DR.Colors.Turq )
-					surface.DrawRect(-700,-300, 1400, 80 )
+				--end
+				if records3d.panelnumb > 1 then
+					records3d.panelnumb = 0
+				end
 
-					deathrunShadowTextSimple("TOP 3 RECORDS", "deathrun_3d2d_large", 0, -300, DR.Colors.Clouds, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, 2)
+				if trecords > lifetime then
+					records3d.born = CurTime()
+					records3d.panelnumb = 1 + records3d.panelnumb
+				end
+
+				cam.Start3D2D( DR.MapRecordsDrawPos, records3d.ang, 0.10 )
+
+				if records3d.panelnumb == 0 then
 						
-					if DR.MapRecordsCache[1] ~= nil then
-						for i = 1, #DR.MapRecordsCache + 2 do
-							local k = i-1
-							if i <= #DR.MapRecordsCache then
-								local v = DR.MapRecordsCache[i]
+						surface.SetDrawColor( DR.Colors.Turq )
+						surface.DrawRect(-700,-300, 1400, 80 )
 
-								deathrunShadowTextSimple( tostring(i)..". "..string.sub( v["nickname"] or "", 1, 24 ), "deathrun_3d2d_large", -700, -150 + 100*k, DR.Colors.Text.Clouds, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP, 2 )
-								deathrunShadowTextSimple( string.ToMinutesSecondsMilliseconds(v["seconds"] or "0"), "deathrun_3d2d_large", 700, -150 + 100*k, DR.Colors.Text.Turq, TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP, 2 )
+						deathrunShadowTextSimple("TOP 5 RECORDS", "deathrun_3d2d_large", 0, -300, DR.Colors.Clouds, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, 2)
+							
+						if DR.MapRecordsCache[1] ~= nil then
+							for i = 1, #DR.MapRecordsCache + 2 do
+								local k = i-1
+								if i <= #DR.MapRecordsCache then
+									local v = DR.MapRecordsCache[i]
 
-								surface.SetDrawColor( DR.Colors.Turq )
-								surface.DrawRect(-700,-150 + 100*k + 80, 1400, 2 )
-							elseif i == #DR.MapRecordsCache + 2 and DR.MapPBCache ~= 0 then
-								deathrunShadowTextSimple( "Personal Best", "deathrun_3d2d_large", -700, -150 + 100*k, DR.Colors.Text.Clouds, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP, 2 )
-								deathrunShadowTextSimple( string.ToMinutesSecondsMilliseconds( DR.MapPBCache or 0 ), "deathrun_3d2d_large", 700, -150 + 100*k, DR.Colors.Text.Turq, TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP, 2 )
+									deathrunShadowTextSimple( tostring(i)..". "..string.sub( v["nickname"] or "", 1, 24 ), "deathrun_3d2d_large", -700, -150 + 100*k, DR.Colors.Text.Clouds, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP, 2 )
+									deathrunShadowTextSimple( string.ToMinutesSecondsMilliseconds(v["seconds"] or "0"), "deathrun_3d2d_large", 700, -150 + 100*k, DR.Colors.Text.Turq, TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP, 2 )
 
-								surface.SetDrawColor( DR.Colors.Turq )
-								surface.DrawRect(-700,-150 + 100*k + 80, 1400, 2 )
+									surface.SetDrawColor( DR.Colors.Turq )
+									surface.DrawRect(-700,-150 + 100*k + 80, 1400, 2 )
+								elseif i == #DR.MapRecordsCache + 2 and DR.MapPBCache ~= 0 then
+									deathrunShadowTextSimple( "Seu Melhor", "deathrun_3d2d_large", -700, -150 + 100*k, DR.Colors.Text.Clouds, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP, 2 )
+									deathrunShadowTextSimple( string.ToMinutesSecondsMilliseconds( DR.MapPBCache or 0 ), "deathrun_3d2d_large", 700, -150 + 100*k, DR.Colors.Text.Turq, TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP, 2 )
+
+									surface.SetDrawColor( DR.Colors.Turq )
+									surface.DrawRect(-700,-150 + 100*k + 80, 1400, 2 )
+								end
 							end
+						else
+							deathrunShadowTextSimple( "No records yet!", "deathrun_3d2d_large", 0, -200, DR.Colors.Text.Clouds, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, 2 )
 						end
-					else
-						deathrunShadowTextSimple( "No records yet!", "deathrun_3d2d_large", 0, -200, DR.Colors.Text.Clouds, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, 2 )
-					end
+				end
+
+				if records3d.panelnumb == 1 then
+
+						surface.SetDrawColor( DR.Colors.Turq )
+						surface.DrawRect(-700,-300, 1400, 80 )
+
+						deathrunShadowTextSimple("MEDALHAS BONUS", "deathrun_3d2d_large", 0, -300, DR.Colors.Clouds, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, 2)
+							
+						if DR.MapMedalsCache[2] ~= nil then
+							for i = 1, #DR.MapMedalsCache + 2 do
+								local k = i-1
+								if i <= #DR.MapMedalsCache then
+									local v = DR.MapMedalsCache[i]
+									local t = string.upper(v["type"])
+									local reward = tostring(v["reward"])
+
+									surface.SetDrawColor(255,255,255,255)
+									surface.SetMaterial(medalicons[t] or medalicons["OUTROS"])
+									surface.DrawTexturedRect( -700, -150 + 100*k, 72, 72)
+									deathrunShadowTextSimple( t, "deathrun_3d2d_large", -600, -150 + 100*k, DR.Colors.Text.Clouds, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP, 2 )
+									deathrunShadowTextSimple( reward.." Pontos", "deathrun_3d2d_large", 0, -150 + 100*k, DR.Colors.Text.Clouds, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, 2 )
+									deathrunShadowTextSimple( string.ToMinutesSecondsMilliseconds(v["seconds"] or "0"), "deathrun_3d2d_large", 700, -150 + 100*k, DR.Colors.Text.Turq, TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP, 2 )
+
+									surface.SetDrawColor( DR.Colors.Turq )
+									surface.DrawRect(-700,-150 + 100*k + 80, 1400, 2 )
+								elseif i == #DR.MapRecordsCache + 1 and DR.MapPBCache ~= 0 then
+									deathrunShadowTextSimple( "Seu Melhor", "deathrun_3d2d_large", -700, -150 + 100*k, DR.Colors.Text.Clouds, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP, 2 )
+									deathrunShadowTextSimple( string.ToMinutesSecondsMilliseconds( DR.MapPBCache or 0 ), "deathrun_3d2d_large", 700, -150 + 100*k, DR.Colors.Text.Turq, TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP, 2 )
+
+									surface.SetDrawColor( DR.Colors.Turq )
+									surface.DrawRect(-700,-150 + 100*k + 80, 1400, 2 )
+								end
+							end
+						else
+							deathrunShadowTextSimple( "Sem medalhas ainda!", "deathrun_3d2d_large", 0, -200, DR.Colors.Text.Clouds, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, 2 )
+						end
+				end
 				cam.End3D2D()
 			end
 		end
 
-		
 	end)
 
 end

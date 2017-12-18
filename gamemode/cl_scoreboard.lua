@@ -543,8 +543,9 @@ DR:SetScoreboardDisplay( "STEAM_0:1:128126755", "icon16/drink.png",						Color(2
 DR:SetScoreboardDisplay( "STEAM_0:0:90710956",	"icon16/cup_error.png",					HexColor( "#009600" ),	"Associate", 									nil ) -- tarkus
 DR:SetScoreboardDisplay( "STEAM_0:1:147138529", "icon16/anchor.png",					HexColor( "#a66bbe" ),	"MEME MASTER",									nil ) -- kaay
 DR:SetScoreboardDisplay( "STEAM_0:1:64432636",	"icon16/map_go.png",	HexColor( "#99ff33" ),	"Playboy Bunny",								nil ) -- gamefresh
-DR:SetScoreboardDisplay( "STEAM_0:1:89220979",	"icon16/joystick.png",					HexColor( "#8cfaef" ),	"Neko Nation",									nil ) -- fich
+DR:SetScoreboardDisplay( "STEAM_0:0:39653636",	"icon16/joystick.png",					HexColor( "#8cfaef" ),	"Estrelinha",									nil ) -- fich
 DR:SetScoreboardDisplay( "STEAM_0:0:71992617",	"icon16/tux.png",						HexColor( "#8cfaef" ),	tostring( math.random(100) ).."% Unstable",		nil ) -- haina
+DR:SetScoreboardDisplay( "STEAM_0:1:81249024",	"icon16/cup_error.png",					HexColor( "#009600" ),	"Concorrência é Importante", 					nil ) -- Ceifador
 
 hook.Add("GetScoreboardNameColor","memes", function( ply ) -- do not remove or i kill u
 

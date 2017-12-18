@@ -2,15 +2,15 @@ print("Loaded cl_menus.lua...")
 
 local crosshair_convars = {
 	{"header", "Crosshair Dimensions"},
-	{"number", "deathrun_crosshair_thickness",0,16, "Stroke Thickness"},
-	{"number", "deathrun_crosshair_gap",0,32, "Inner Gap"},
-	{"number", "deathrun_crosshair_size",0,32, "Stroke Length"},
+	{"number", "deathrun_crosshair_thickness",0,16, "Espessura"},
+	{"number", "deathrun_crosshair_gap",0,32, "Abertura Interna"},
+	{"number", "deathrun_crosshair_size",0,32, "Comprimento"},
 
 	{"header", "Crosshair Color"},
-	{"number", "deathrun_crosshair_red",0,255, "Red"},
-	{"number", "deathrun_crosshair_green",0,255, "Green"},
-	{"number", "deathrun_crosshair_blue",0,255, "Blue"},
-	{"number", "deathrun_crosshair_alpha",0,255, "Transparency"},
+	{"number", "deathrun_crosshair_red",0,255, "Vermelho"},
+	{"number", "deathrun_crosshair_green",0,255, "Verde"},
+	{"number", "deathrun_crosshair_blue",0,255, "Azul"},
+	{"number", "deathrun_crosshair_alpha",0,255, "Transparência"},
 }
 
 function DR:OpenCrosshairCreator()
@@ -18,7 +18,7 @@ function DR:OpenCrosshairCreator()
 	frame:SetSize(640,480)
 	frame:Center()
 	frame:MakePopup()
-	frame:SetTitle("Crosshair Creator")
+	frame:SetTitle("Criador de Crosshair")
 
 	local panel = vgui.Create("DPanel", frame)
 	panel:SetSize( frame:GetWide()-8, frame:GetTall()-44 )
@@ -89,7 +89,7 @@ function DR:OpenCrosshairCreator()
 	local lbl = vgui.Create("DLabel")
 	lbl:SetFont("deathrun_derma_Medium")
 	lbl:SetTextColor(DR.Colors.Text.Turq)
-	lbl:SetText("Crosshair Options")
+	lbl:SetText("Opções de Crosshair")
 	lbl:SizeToContents()
 	lbl:SetWide( dlist:GetWide() )
 	dlist:Add(lbl)
@@ -122,7 +122,7 @@ function DR:OpenCrosshairCreator()
 
 			local check = vgui.Create("AuToggle_Deathrun")
 			check:SetValue( GetConVar(v[2]):GetBool() )
-			check:SetText("Enabled")
+			check:SetText("Ativado")
 			check:SetTextColor( DR.Colors.Text.Grey3 )
 			check:SizeToContents()
 			check:SetConVar(v[2])
@@ -169,7 +169,7 @@ function DR:OpenHelp()
 	frame:SetTitle("Deathrun Help")
 
 	local lbl = vgui.Create("DLabel", frame)
-	lbl:SetText("Please wait while page loads...")
+	lbl:SetText("Espere a página carregar...")
 	lbl:SetFont("deathrun_derma_Large")
 	lbl:SizeToContents()
 	lbl:Center()
@@ -188,37 +188,37 @@ end)
 local deathrun_settings = {
 	{"header","HUD Settings"},
 
-	{"number", "deathrun_hud_theme",0,12,"HUD Theme"},
-	{"number", "deathrun_hud_position",0,8,"Position of the HUD (HP, Velocity, Time)"},
-	{"number", "deathrun_hud_ammo_position",0,8,"Position of the Ammo HUD"},
-	{"number", "deathrun_hud_alpha",0,255,"Transparency of the HUD background"},
-	{"number", "deathrun_targetid_fade_duration",0,10,"TargetID fade duration"},
-	{"boolean", "deathrun_zones_visibility", "Toggle Zone Visibility"},
-	{"boolean", "deathrun_stats_visibility", "Toggle the YOUR STATS popup"},
+	{"number", "deathrun_hud_theme",0,12,"Tema da interface"},
+	{"number", "deathrun_hud_position",0,8,"Posição da interface(HP, Velocidade, Tempo)"},
+	{"number", "deathrun_hud_ammo_position",0,8,"Posição da interface de armas"},
+	{"number", "deathrun_hud_alpha",0,255,"Transparência do fundo da interface"},
+	{"number", "deathrun_targetid_fade_duration",0,10,"Tempo para informações dos players desaparecerem"},
+	{"boolean", "deathrun_zones_visibility", "Visibilidade das zonas"},
+	{"boolean", "deathrun_stats_visibility", "Ativar o popup SUAS ESTATISTICAS"},
 
-	{"header", "Spectator Settings"},
+	{"header", "Opções de espectador"},
 
-	{"boolean", "deathrun_spectate_only", "Spectate-only mode"},
+	{"boolean", "deathrun_spectate_only", "Modo Espectador"},
 
-	{"header", "Thirdperson Settings"},
+	{"header", "Opções de terceira pessoa"},
 
-	{"boolean", "deathrun_thirdperson_enabled", "Thirdperson mode"},
-	{"number", "deathrun_thirdperson_opacity", 5,255, "Transparency of your playermodel in Thirdperson mode"},
-	{"number", "deathrun_thirdperson_offset_x", -40, 40, "Thirdperson camera horizontal offset"},
-	{"number", "deathrun_thirdperson_offset_y", -40, 40, "Thirdperson camera vertical offset"},
-	{"number", "deathrun_thirdperson_offset_z", -75, 75, "Thirdperson camera forward-backward offset"},
-	{"number", "deathrun_thirdperson_offset_pitch", -75, 75, "Thirdperson camera Pitch offset"},
-	{"number", "deathrun_thirdperson_offset_yaw", -75, 75, "Thirdperson camera Yaw offset"},
-	{"number", "deathrun_thirdperson_offset_roll", -75, 75, "Thirdperson camera Roll offset"},
+	{"boolean", "deathrun_thirdperson_enabled", "Modo Terceira Pessoa"},
+	{"number", "deathrun_thirdperson_opacity", 5,255, "Transparência do seu modelo"},
+	{"number", "deathrun_thirdperson_offset_x", -40, 40, "Deslocamendo horizontal da camera"},
+	{"number", "deathrun_thirdperson_offset_y", -40, 40, "Deslocamendo vertical da camera"},
+	{"number", "deathrun_thirdperson_offset_z", -75, 75, "Deslocamento frontal da camera"},
+	{"number", "deathrun_thirdperson_offset_pitch", -75, 75, "Deslocamento de passo da camera"},
+	{"number", "deathrun_thirdperson_offset_yaw", -75, 75, "Deslocamento de guinada da camera"},
+	{"number", "deathrun_thirdperson_offset_roll", -75, 75, "Deslocamento de rolagem da camera"},
 
-	{"header", "Other Settings"},
+	{"header", "Outras Opções"},
 
-	{"boolean", "deathrun_round_cues", "Audible round cues at starts and ends of rounds"},
-	{"boolean", "deathrun_info_on_join", "Show the info menu when joining the server"},
-	{"boolean", "deathrun_autojump","Autojump (Enabling this limits velocity depending on server settings.)"},
-	{"boolean", "deathrun_enable_announcements", "Enable help messages"},
-	{"number", "deathrun_announcement_interval", 0, 500, "Seconds between help messages."},
-	{"number", "deathrun_teammate_fade_distance", 0, 512, "Teammate fade distance."},
+	{"boolean", "deathrun_round_cues", "Sons de inicio e final de round"},
+	{"boolean", "deathrun_info_on_join", "Mostrar a janela de informações quando entrar no servidor"},
+	{"boolean", "deathrun_autojump","Pulo Automatico"},
+	{"boolean", "deathrun_enable_announcements", "Ativar mensagens de ajuda"},
+	{"number", "deathrun_announcement_interval", 0, 500, "Segundos entre mensagens de ajuda"},
+	{"number", "deathrun_teammate_fade_distance", 0, 512, "Distancia de desvaecer amigos (Para diminuir lag)"},
 
 
 }
@@ -240,7 +240,7 @@ function DR:OpenSettings()
 	frame:SetSize(480,640)
 	frame:Center()
 	frame:MakePopup()
-	frame:SetTitle("Deathrun Settings")
+	frame:SetTitle("Opções do Deathrun")
 
 	local controls = vgui.Create("DPanel", frame)
 	controls:SetSize( frame:GetWide()-8, frame:GetTall()-44 )
@@ -278,7 +278,7 @@ function DR:OpenSettings()
 	local lbl = vgui.Create("DLabel")
 	lbl:SetFont("deathrun_derma_Medium")
 	lbl:SetTextColor(DR.Colors.Text.Turq)
-	lbl:SetText("Local Settings")
+	lbl:SetText("Opções locais")
 	lbl:SizeToContents()
 	lbl:SetWide( dlist:GetWide() )
 	dlist:Add(lbl)
@@ -318,7 +318,7 @@ function DR:OpenSettings()
 
 			local check = vgui.Create("AuToggle_Deathrun")
 			check:SetValue( GetConVar(v[2]):GetInt() )
-			check:SetText("Enabled")
+			check:SetText("Ativado")
 			check:SetTextColor( DR.Colors.Text.Grey3 )
 			check:SizeToContents()
 			check:SetConVar(v[2])
@@ -381,7 +381,7 @@ function DR:OpenZoneEditor()
 	frame:SetSize(320,480)
 	frame:Center()
 	frame:MakePopup()
-	frame:SetTitle("Zone Editor")
+	frame:SetTitle("Editor de Zonas")
 
 	local panel = vgui.Create("DPanel", frame)
 	panel:SetSize( frame:GetWide()-8, frame:GetTall()-44 )
@@ -418,7 +418,7 @@ function DR:OpenZoneEditor()
 	local lbl = vgui.Create("DLabel")
 	lbl:SetFont("deathrun_derma_Small")
 	lbl:SetTextColor(DR.Colors.Text.Turq)
-	lbl:SetText("Create Zone")
+	lbl:SetText("Criar Zona")
 	lbl:SizeToContents()
 	lbl:SetWide( dlist:GetWide() )
 	dlist:Add(lbl)
@@ -426,7 +426,7 @@ function DR:OpenZoneEditor()
 	local lbl = vgui.Create("DLabel")
 	lbl:SetFont("deathrun_derma_Tiny")
 	lbl:SetTextColor( DR.Colors.Text.Grey3 )
-	lbl:SetText("Zone Name:")
+	lbl:SetText("Nome:")
 	lbl:SizeToContents()
 	lbl:SetWide( dlist:GetWide()/2 -2 )
 	dlist:Add(lbl)
@@ -439,7 +439,7 @@ function DR:OpenZoneEditor()
 	local lbl = vgui.Create("DLabel")
 	lbl:SetFont("deathrun_derma_Tiny")
 	lbl:SetTextColor( DR.Colors.Text.Grey3 )
-	lbl:SetText("Zone Type:")
+	lbl:SetText("Tipo:")
 	lbl:SizeToContents()
 	lbl:SetWide( dlist:GetWide()/2 -2 )
 	dlist:Add(lbl)
@@ -454,7 +454,7 @@ function DR:OpenZoneEditor()
 
 	local sbmt =  vgui.Create("deathrun_button")
 	sbmt:SetSize(dlist:GetWide(), 18)
-	sbmt:SetText("Create Zone")
+	sbmt:SetText("Criar Zona")
 	sbmt:SetFont("deathrun_derma_Tiny")
 	sbmt:SetOffsets(0,0)
 	dlist:Add(sbmt)
@@ -464,7 +464,7 @@ function DR:OpenZoneEditor()
 	sbmt.dd = dd
 
 	function te:OnTextChanged()
-		self.sbmt:SetText("Create Zone '"..self:GetText().."'")
+		self.sbmt:SetText("Zona '"..self:GetText().."'criada")
 	end
 
 	function sbmt:DoClick()
@@ -476,14 +476,14 @@ function DR:OpenZoneEditor()
 	local lbl = vgui.Create("DLabel")
 	lbl:SetFont("deathrun_derma_Small")
 	lbl:SetTextColor(DR.Colors.Text.Turq)
-	lbl:SetText("Modify Zone")
+	lbl:SetText("Modificar Zona")
 	lbl:SizeToContents()
 	lbl:SetWide( dlist:GetWide() )
 	dlist:Add(lbl)
 
 	local dd = vgui.Create("DComboBox")
 	dd:SetSize( dlist:GetWide(), 18 )
-	dd:SetValue(LocalPlayer().LastSelectZone or "Select Zone")
+	dd:SetValue(LocalPlayer().LastSelectZone or "Selecionar Zona")
 	for name,z in pairs(ZONE.zones) do
 		if z.type then
 			dd:AddChoice( name )
@@ -532,7 +532,7 @@ function DR:OpenZoneEditor()
 
 	local but =  vgui.Create("deathrun_button")
 	but:SetSize(dlist:GetWide(), 18)
-	but:SetText("Set zone color")
+	but:SetText("Definir a cor da zona")
 	but:SetFont("deathrun_derma_Tiny")
 	but:SetOffsets(0,0)
 	but.dd = dd
@@ -545,7 +545,7 @@ function DR:OpenZoneEditor()
 
 	local but =  vgui.Create("deathrun_button")
 	but:SetSize(dlist:GetWide(), 18)
-	but:SetText("Set Pos1 to eyetrace")
+	but:SetText("Definir posição 1 para onde olha")
 	but:SetFont("deathrun_derma_Tiny")
 	but:SetOffsets(0,0)
 	but.dd = dd
@@ -556,7 +556,7 @@ function DR:OpenZoneEditor()
 
 	local but =  vgui.Create("deathrun_button")
 	but:SetSize(dlist:GetWide(), 18)
-	but:SetText("Set Pos2 to eyetrace")
+	but:SetText("Definir posição 2 para onde olha")
 	but:SetFont("deathrun_derma_Tiny")
 	but:SetOffsets(0,0)
 	but.dd = dd
@@ -567,7 +567,7 @@ function DR:OpenZoneEditor()
 
 	local but =  vgui.Create("deathrun_button")
 	but:SetSize(dlist:GetWide(), 18)
-	but:SetText("Remove this zone")
+	but:SetText("Remover esta zona")
 	but:SetFont("deathrun_derma_Tiny")
 	but:SetOffsets(0,0)
 	but.dd = dd
@@ -591,7 +591,7 @@ MOTDConVars.Title = GetConVar("deathrun_motd_title")
 MOTDConVars.URL = GetConVar("deathrun_motd_url")
 
 DR.MOTDEnabled = MOTDConVars.Enabled:GetBool()
-DR.MOTDTitle = MOTDConVars.Title:GetString() or "Deathrun Information"
+DR.MOTDTitle = MOTDConVars.Title:GetString() or "Informações do Deathrun"
 DR.MOTDWidth = DR.MOTDWidth or ScrW()-320
 DR.MOTDHeight = DR.MOTDHeight or ScrH()-240
 DR.MOTDPage = MOTDConVars.URL:GetString() or "http://arizard.github.io/deathruninfo.html"
@@ -630,7 +630,7 @@ function DR:OpenQuickInfo()
 	end
 
 	local lbl = vgui.Create("DLabel", frame)
-	lbl:SetText("Please wait while page loads...")
+	lbl:SetText("Espere enquanto a página carrega...")
 	lbl:SetFont("deathrun_derma_Large")
 	lbl:SizeToContents()
 	lbl:Center()
@@ -710,7 +710,7 @@ function DR:OpenWaitingMenu()
 	frame:SetSize(600,270)
 	frame:Center()
 	frame:MakePopup()
-	frame:SetTitle("Waiting For Players")
+	frame:SetTitle("Esperando por players")
 
 	local panel = vgui.Create("panel", frame)
 	panel:SetSize(frame:GetWide()-8, frame:GetTall()-44)
@@ -724,15 +724,15 @@ function DR:OpenWaitingMenu()
 
 		local ix, iy, iw, ih = x+8, y+8, w-16, h-16
 
-		local info = [[Welcome to the server! Currently there are no players online. 
-		This means that you can explore the map at your own pace 
-		from the safety of godmode, so you can practice 
-		your Bhop and check for auto-traps with ease.\n\n
-		Some useful commands:\n
-		\t\b !respawn - Respawn yourself.\n
-		\t\b !cleanup - Reset all traps on the map.\n
-		\t\b !help - View the help menu.\n\n
-		Enjoy, and have fun!]]
+		local info = [[Bem vindo ao server! No momento você é o unico player aqui. 
+		Isto quer dizer que você pode explorar o mapa no 
+		seu ritimo com a segurança do godmode, você pode praticar
+		seu bhop e checkar o mapa por auto-traps a vontade.\n\n
+		Alguns comandos uteis:\n
+		\t\b !respawn - Reinicia sua posição.\n
+		\t\b !cleanup - Reinicia as traps do mapa.\n
+		\t\b !help - Abre a janela de ajuda.\n\n
+		Divirta-se!]]
 
 		info = DR:GetWordWrapText( info, iw, "deathrun_hud_Medium_light" )
 		deathrunShadowText(info, "deathrun_hud_Medium_light", ix, iy, HexColor("#303030"), nil, nil, 0 )
@@ -748,7 +748,7 @@ function DR:OpenForcedSpectatorMenu( msg )
 	local frame = vgui.Create( "deathrun_window" )
 	frame:SetSize( 640, 200 )
 	frame:Center()
-	frame:SetTitle("Moved to Spectator")
+	frame:SetTitle("Movido para os espectadores")
 	frame:MakePopup()
 
 	local panel = vgui.Create("panel", frame)
@@ -763,10 +763,10 @@ function DR:OpenForcedSpectatorMenu( msg )
 
 		local ix, iy, iw, ih = x+8, y+8, w-16, h-16
 
-		local info = [[You have been moved to the Spectator team for being AFK. 
-		To move back, either click on one of the buttons below or visit the 
-		Spectator section of the F2 menu.
-		\n\nWould you like to move back into to the game?]]
+		local info = [[Você foi movido para os espectadores por ficar AFK
+		Para ser movido de volta, clique em um dos botões abaixo ou
+		visite as opções de espectador no menu F2.
+		\n\nGostaria de ser movido de volta para o jogo?]]
 
 		if msg then info = msg end
 
@@ -777,7 +777,7 @@ function DR:OpenForcedSpectatorMenu( msg )
 	local cont = vgui.Create("deathrun_button", panel)
 	cont:SetSize((panel:GetWide() - 3*4)/2, 32 )
 	cont:SetPos(4, panel:GetTall()-32 -4)
-	cont:SetText("No, I'm okay with this.")
+	cont:SetText("Não, estou bem por aqui.")
 
 	function cont:DoClick()
 		self:GetParent():GetParent():Close()
@@ -786,7 +786,7 @@ function DR:OpenForcedSpectatorMenu( msg )
 	local back = vgui.Create("deathrun_button", panel)
 	back:SetSize((panel:GetWide() - 3*4)/2, 32 )
 	back:SetPos(8+(panel:GetWide() - 3*4)/2, panel:GetTall()-32 -4)
-	back:SetText("Yes, please move me back.")
+	back:SetText("Sim, me mova de volta.")
 	function back:DoClick()
 		LocalPlayer():ConCommand("deathrun_spectate_only 0")
 		self:GetParent():GetParent():Close()

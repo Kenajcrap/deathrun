@@ -20,7 +20,6 @@ AddCSLuaFile( "config.lua" )
 
 
 include("config.lua")
-
 include( "shared.lua" )
 
 -- scoreboard
@@ -268,17 +267,22 @@ hook.Add("AcceptInput", "DeathrunKillers", function( ent, input, activator, call
 end)
 
 local causesOfDeath = {
-	"Natural causes",
+	"Causas Naturais",
 	"Inappropriate yelling",
-	"Vehicular homicide",
+	"Homicidio Veicular",
 	"Bio-engineered assault turtles with acid breath",
 	"Dark and mysterious forces beyond our control",
 	"Joe Biden",
 	"The cool, refreshing taste of Pepsi®",
-	"The Patriarchy",
-	"The rains down in Africa",
-	"The horses",
-	"A saxophone solo"
+	"O Patriarcado",
+	"Overdose de Todinho",
+	"Os cavalos",
+	"A saxophone solo",
+	"Sua mãe, aquela vagabunda",
+	"Surra de pau mole",
+	"Aidis",
+	"Temer",
+	"Cheirar queijo"
 }
 
 function GM:PlayerDeath( ply, inflictor, attacker )
@@ -680,19 +684,35 @@ hook.Add("SetupMove", "DeathrunIdleCheck", function( ply, mv )
 
 end)
 
+local plyafk = {}
+timer.Create("SimpleAfkChecker",0.95,0,function()
+	for k, v in pairs(player.GetAll()) do
+		plyafk[v] = plyafk[v] or {}
+		local oldangs = plyafk[v][2] or v:EyeAngles()
+		plyafk[v][1] = plyafk[v][1] or CurTime()
+		plyafk[v][2] = v:EyeAngles()
+		if plyafk[v][2] ~= oldangs then
+			plyafk[v][1] = CurTime()
+		end
+		plyafk[v][3] = CurTime() - plyafk[v][1]
+	end
+end)
+
+
 function DR:CheckIdleTime( ply ) -- return how long the player has been idle for
-	return 0 -- hotfix to prevent autokick after 22-02-2016 update
+
+return plyafk[ply][3] or 0 -- hotfix to prevent autokick after 22-02-2016 update
 	-- ply.LastActiveTime = ply.LastActiveTime or CurTime()
 	-- return CurTime() - ply.LastActiveTime
 end
 local IdleTimer = CreateConVar("deathrun_idle_kick_time", 60, defaultFlags, "How many seconds each to wait before speccing idle players.")
-timer.Create("CheckIdlePlayers", 0.95, 0, function()
+timer.Create("CheckIdlePlayers", 1, 0, function()
 	for k, ply in ipairs(player.GetAllPlaying()) do -- don't kick afk spectators or bots
 		--print( ply:Nick(), DR:CheckIdleTime( ply ) )
-		if math.floor(DR:CheckIdleTime( ply )) == math.floor(IdleTimer:GetInt() -25) then
-			ply:DeathrunChatPrint("If you do not move in 25 seconds, you will be moved to spec due to being idle.")
+		if math.floor(DR:CheckIdleTime( ply )) == math.floor(IdleTimer:GetInt() - 15) then
+			ply:DeathrunChatPrint("Se você não se mover em 15 segundos você será movido para os espectadores")
 		end
-		if DR:CheckIdleTime( ply ) > IdleTimer:GetInt() and ply:SteamID() ~= "BOT" and (not ply:IsAdmin()) and (ply:GetObserverMode() == OBS_MODE_NONE) then
+		if DR:CheckIdleTime( ply ) > IdleTimer:GetInt() and ply:SteamID() ~= "BOT" and (ply:GetObserverMode() == OBS_MODE_NONE) then
 			ply:ConCommand("deathrun_spectate_only 1")
 			net.Start("DeathrunSpectatorNotification")
 			net.Send( ply )
@@ -862,3 +882,15 @@ end)
 hook.Add("InitPostEntity", "RemoveSpeedMods", function()
 	DR:RemoveSpeedMods()
 end)
+
+function GM:PlayerSetHandsModel( ply, ent )
+
+	local simplemodel = player_manager.TranslateToPlayerModelName( ply:GetModel() )
+	local info = player_manager.TranslatePlayerHands( simplemodel )
+	if ( info ) then
+		ent:SetModel( info.model )
+		ent:SetSkin( info.skin )
+		ent:SetBodyGroups( info.body )
+	end
+
+end

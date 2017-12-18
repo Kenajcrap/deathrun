@@ -132,6 +132,81 @@ concommand.Add("deathrun_get_stats", function( ply, cmd, args )
 	end
 end)
 
+
+concommand.Add("deathrun_get_map_records", function( ply, cmd, args )
+
+	local endmap = nil
+	local function findendmap()
+		--PrintTable( ZONE.zones )
+		if ZONE.zones then
+			for k,v in pairs( ZONE.zones ) do
+				print(v.type)
+				if v.type == "end" then
+					endmap = v
+				end
+			end
+		end
+	end
+	findendmap()
+
+	-- deathrun_send_map_records
+	--
+	rec = sql.Query("SELECT * FROM deathrun_records WHERE mapname = '"..game.GetMap().."' ORDER BY seconds ASC LIMIT 5")
+
+	--PrintTable( endmap )
+	if rec == nil then 
+		rec = {}
+	else
+		for i = 1, #rec do
+			rec[i]["nickname"] = DR:SteamToNick( rec[i]["sid64"] )
+		end
+	end
+
+	net.Start("deathrun_send_map_records_chat")
+	net.WriteString( util.TableToJSON( rec ) )
+	net.Send(ply)
+end)
+
+concommand.Add("deathrun_set_medal", function( ply, cmd, args )
+	local medals = {
+	{name = "platina", reward = 100},
+	{name = "ouro", reward = 50},
+	{name = "safira", reward = 25},
+	{name = "bronze", reward = 10}
+}
+	if DR:CanAccessCommand(ply, cmd) then
+		if #args > 1 and #args < 4 then
+			local str = string.lower(tostring(args[1]))
+			local tim = math.Round(args[2], 2)
+			local rew = nil
+			if #args == 2 then
+				for _,v in ipairs(medals) do
+					if v.name == str then
+						rew = v.reward
+					break
+					end
+				end
+			else 
+				rew = math.Round(args[3])
+			end
+			if rew ~= nil then
+				if sql.Query("SELECT * FROM deathrun_medals WHERE mapname = '"..game.GetMap().."' AND type = '"..str.."'") == nil then
+					sql.Query("INSERT INTO deathrun_medals (mapname, type, seconds, reward) VALUES ('"..game.GetMap().."', '"..str.."', "..tim..", "..rew..")")
+				else
+					sql.Query("UPDATE deathrun_medals SET seconds = "..tostring(tim)..", reward = "..tostring(rew).." WHERE mapname = '"..game.GetMap().."' AND type = '"..str.."'")
+				end
+				DeathrunSafeChatPrint(ply, "Medalha de "..str.." criada com tempo de "..tim.." segundos e recompensa de "..rew.." pontos!")
+			else
+				DeathrunSafeChatPrint(ply, "Recompensa predefinida não encontrada!")
+			end
+		else 
+			DeathrunSafeChatPrint(ply, "Utilização: !SetMedal <tipo> <tempo> [recompensa]")
+		end
+	else 
+		DeathrunSafeChatPrint(ply, "Você não tem permissão para fazer isso!")
+	end
+end)
+
 -- chat commands
 
 DR.ChatCommands = {}
@@ -180,6 +255,10 @@ DR:AddChatCommand("cleanup", function(ply)
 	ply:ConCommand("deathrun_cleanup")
 end)
 
+DR:AddChatCommand("setmedal", function(ply, args)
+	ply:ConCommand("deathrun_set_medal "..(args[1] or "").." "..(args[2] or "").." "..(args[3] or "").." "..(args[4] or "").." "..(args[5] or ""))
+end)
+
 DR:AddChatCommand("crosshair", function(ply)
 	ply:ConCommand("deathrun_open_crosshair_creator")
 end)
@@ -209,6 +288,10 @@ end)
 
 DR:AddChatCommand("thirdperson", function(ply)
 	ply:ConCommand("deathrun_toggle_thirdperson")
+end)
+
+DR:AddChatCommand("recordes", function(ply)
+	ply:ConCommand("deathrun_get_map_records")
 end)
 
 DR:AddChatCommand("stats", function( ply, args )
