@@ -19,16 +19,22 @@ local defaultFlags = FCVAR_SERVER_CAN_EXECUTE + FCVAR_REPLICATED + FCVAR_NOTIFY 
 local PointshopFinishReward = CreateConVar("deathrun_pointshop_finish_reward", 10, defaultFlags, "How many points to award the player when he finishes the map." )
 local PointshopKillReward = CreateConVar("deathrun_pointshop_kill_reward", 5, defaultFlags, "How many points to award the player when they kill another player." )
 local PointshopWinReward = CreateConVar("deathrun_pointshop_win_reward", 3, defaultFlags, "How many points to award the player when their team wins." )
+local PointshopSuicideReward = CreateConVar("deathrun_pointshop_Suicide_reward", 1, defaultFlags, "How many points to award the player the other teams player suicides" )
 local PointshopRewardMessage = CreateConVar("deathrun_pointshop_notify", 1, defaultFlags, "Enable chat messages or notifications when rewards are received - does not work for PS2")
 
 if SERVER then
+
+	function DR:GetMultiplier( ply )
+		local pmulti = sql.Query( "SELECT pmultiplier FROM deathrun_stats WHERE sid = '"..ply:SteamID().."'") or {[1]={["pmultiplier"] = "1"}}
+		return tonumber(pmulti[1]["pmultiplier"])
+	end
 
 	function DR:RewardPlayer( ply, amt, reason )
 		amt = amt or 0
 		if hasPointshop then
 			ply:PS_GivePoints( amt )
 			if PointshopRewardMessage:GetBool() then
-				ply:PS_Notify("You were given "..tostring( amt ).." points for "..(reason or "playing").."!")
+				ply:PS_Notify("Foram dados "..tostring( amt ).." Pontos a você por "..(reason or "jogar").."!")
 			end
 		end
 		if hasRedactedHub then
@@ -53,13 +59,28 @@ if SERVER then
 
 
 	hook.Add("DeathrunPlayerFinishMap", "PointshopRewards", function( ply, zname, z, place )
-		DR:RewardPlayer( ply, PointshopFinishReward:GetInt(), "finishing the map")
+		DR:RewardPlayer( ply, math.Round(PointshopFinishReward:GetInt()*#player.GetAllPlaying()*DR:GetMultiplier(ply),0), " terminar o mapa")
+	end)
+
+	hook.Add("DeathrunPlayerGetMedal", "PointshopReward", function (ply, type, reward)
+		DR:RewardPlayer( ply, math.Round(reward*#player.GetAllPlaying()*DR:GetMultiplier(ply),0), "obter a medalha de "..type.."!")
 	end)
 
 	hook.Add("PlayerDeath", "PointshopRewards", function( ply, inflictor, attacker )
 		if attacker:IsPlayer() then
 			if ply:Team() ~= attacker:Team() then
-				DR:RewardPlayer( attacker, PointshopKillReward:GetInt(), "killing "..ply:Nick())
+				DR:RewardPlayer( attacker, math.Round(	PointshopKillReward:GetInt()*#player.GetAllPlaying()*DR:GetMultiplier(attacker),0), " matar "..ply:Nick())
+			end
+		else
+			if ply:Team() == TEAM_RUNNER then
+				for k,v in ipairs( team.GetPlayers(TEAM_DEATH)) do 
+					DR:RewardPlayer( v, math.Round(PointshopSuicideReward:GetInt()*#team.GetPlayers(TEAM_RUNNER)*DR:GetMultiplier(v),0), ply:Nick().." se suicidar")
+				end
+			end
+			if ply:Team() == TEAM_DEATH then
+				for k,v in ipairs( team.GetPlayers(TEAM_RUNNER)) do
+					DR:RewardPlayer( v, math.Round(PointshopSuicideReward:GetInt()*#team.GetPlayers(TEAM_DEATH)*DR:GetMultiplier(v),0), ply:Nick().." se suicidar")
+				end
 			end
 		end
 	end)
@@ -67,7 +88,7 @@ if SERVER then
 	hook.Add("DeathrunRoundWin", "PointshopRewards", function( winner )
 		for k,v in ipairs( player.GetAllPlaying() ) do
 			if v:Team() == winner then
-				DR:RewardPlayer( v, PointshopWinReward:GetInt(), "winning the round")
+				DR:RewardPlayer( v, PointshopWinReward:GetInt()*#player.GetAllPlaying()*DR:GetMultiplier(v), "vencer o round")
 			end
 		end
 	end)
