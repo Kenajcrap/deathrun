@@ -168,39 +168,37 @@ concommand.Add("deathrun_get_map_records", function( ply, cmd, args )
 end)
 
 concommand.Add("deathrun_set_medal", function( ply, cmd, args )
-	local medals = {
-	{name = "platina", reward = 100},
-	{name = "ouro", reward = 50},
-	{name = "safira", reward = 25},
-	{name = "bronze", reward = 10}
-}
 	if DR:CanAccessCommand(ply, cmd) then
-		if #args > 1 and #args < 4 then
+		if #args > 1 and #args < 5 then
+			medals = DR.Medals
 			local str = string.lower(tostring(args[1]))
 			local tim = math.Round(args[2], 2)
 			local rew = nil
+			local bon = nil
 			if #args == 2 then
 				for _,v in ipairs(medals) do
 					if v.name == str then
-						rew = v.reward
+						rew = v.reward or 0
+						bon = v.bonus or 0
 					break
 					end
 				end
 			else 
 				rew = math.Round(args[3])
+				bon = args[4]
 			end
-			if rew ~= nil then
+			if rew ~= nil and bon ~= nil then
 				if sql.Query("SELECT * FROM deathrun_medals WHERE mapname = '"..game.GetMap().."' AND type = '"..str.."'") == nil then
-					sql.Query("INSERT INTO deathrun_medals (mapname, type, seconds, reward) VALUES ('"..game.GetMap().."', '"..str.."', "..tim..", "..rew..")")
+					sql.Query("INSERT INTO deathrun_medals (mapname, type, seconds, reward, bonus) VALUES ('"..game.GetMap().."', '"..str.."', "..tim..", "..rew..", "..bon..")")
 				else
-					sql.Query("UPDATE deathrun_medals SET seconds = "..tostring(tim)..", reward = "..tostring(rew).." WHERE mapname = '"..game.GetMap().."' AND type = '"..str.."'")
+					sql.Query("UPDATE deathrun_medals SET seconds = "..tostring(tim)..", reward = "..tostring(rew)..", bonus = "..tostring(bon).." WHERE mapname = '"..game.GetMap().."' AND type = '"..str.."'")
 				end
-				DeathrunSafeChatPrint(ply, "Medalha de "..str.." criada com tempo de "..tim.." segundos e recompensa de "..rew.." pontos!")
+				DeathrunSafeChatPrint(ply, "Medalha de "..str.." criada com tempo de "..tim.." segundos e recompensa de "..rew.." reliquias e bonus de "..bon.." pontos!")
 			else
 				DeathrunSafeChatPrint(ply, "Recompensa predefinida não encontrada!")
 			end
 		else 
-			DeathrunSafeChatPrint(ply, "Utilização: !SetMedal <tipo> <tempo> [recompensa]")
+			DeathrunSafeChatPrint(ply, "Utilização: !SetMedal <tipo> <tempo> [recompensa] [bonus]")
 		end
 	else 
 		DeathrunSafeChatPrint(ply, "Você não tem permissão para fazer isso!")

@@ -35,6 +35,40 @@ DR.Colors = {
 		Grey3 = HexColor("#303030")
 	}
 }
+DR.Medals = {
+	{
+		name = "platina",
+		icon = "cb3_keys/cb3_platinum_relic_64.png",
+		reward = 3,
+		bonus = 100
+	},
+
+	{
+		name = "ouro",
+		icon = "cb3_keys/cb3_gold_relic_64.png",
+		reward = 2,
+		bonus = 50
+	},
+
+	{
+		name = "safira",
+		icon = "cb3_keys/cb3_saphire_relic_64.png",
+		reward = 1,
+		bonus = 25
+	},
+
+	{
+	 	name = "bronze",
+		icon = "cb3_keys/cb3_bronze_relic_64.png",
+		reward = 0.5,
+		bonus = 10
+	},
+
+	other = {
+		name = "other",
+		icon = "icon16/star.png",
+	}
+}
 
 DR.DermaColors = {}
 

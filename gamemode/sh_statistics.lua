@@ -8,7 +8,7 @@ if SERVER then
 	-- record timings
 	--lua_run sql.Query( "UPDATE deathrun_stats SET type = 'safira' WHERE sid = 'pa'" )
 	sql.Query("CREATE TABLE IF NOT EXISTS deathrun_records ( sid64 STRING, mapname STRING, seconds REAL )")
-	sql.Query("CREATE TABLE IF NOT EXISTS deathrun_medals ( mapname STRING, type STRING, seconds REAL, reward REAL )")
+	sql.Query("CREATE TABLE IF NOT EXISTS deathrun_medals ( mapname STRING, type STRING, seconds REAL, reward REAL, bonus REAL )")
 
 	hook.Add("DeathrunPlayerFinishMap", "DeathrunMapRecords", function( ply, zname, zone, place, seconds )
 		local sid64 = ply:SteamID64()
@@ -20,8 +20,8 @@ if SERVER then
 	hook.Add("DeathrunPlayerFinishMap", "DeathrunPlayerGetMedal", function ( ply, zname, zone, place, seconds )
 		for k, v in ipairs(res3) do
 			if seconds <= tonumber(v["seconds"]) then
-				hook.Call("DeathrunPlayerGetMedal", nil, ply, v["type"], v["reward"])
-				sound.Play("cb_sounds/crystal_collect.wav" , ply:GetPos())
+				hook.Call("DeathrunPlayerGetMedal", nil, ply, v["type"], v["reward"], v["bonus"])
+				ply:EmitSound("cb_sounds/crystal_collect.wav" , 300, 100, 1, CHAN_ITEM)
 			break
 			end
 		end
@@ -55,10 +55,10 @@ if SERVER then
 
 
 
-		if sql.Query("SELECT * FROM deathrun_medals WHERE mapname = '"..game.GetMap().."' AND type = 'Platina'") == nil then
-			sql.Query("INSERT INTO deathrun_medals (mapname, type, seconds, reward) VALUES ('"..game.GetMap().."', 'Platina', "..best[1]["seconds"]..", 100)")
+		if sql.Query("SELECT * FROM deathrun_medals WHERE mapname = '"..game.GetMap().."' AND type = 'platina'") == nil then
+			sql.Query("INSERT INTO deathrun_medals (mapname, type, seconds, reward, bonus) VALUES ('"..game.GetMap().."', 'platina', "..best[1]["seconds"]..", 3, 100)")
 		else
-			sql.Query("UPDATE deathrun_medals SET seconds = "..best[1]["seconds"].." WHERE type = 'Platina'")
+			sql.Query("UPDATE deathrun_medals SET seconds = "..best[1]["seconds"].." WHERE type = 'platina'")
 		end
 
 
@@ -449,13 +449,11 @@ if CLIENT then
 
 	records3d.born = CurTime()
 
-	local medalicons = {}
-	medalicons["PLATINA"] = Material("cb3_keys/cb3_platinum_relic_64.png")
-	medalicons["OURO"] = Material("cb3_keys/cb3_gold_relic_64.png")
-	medalicons["SAFIRA"] = Material("cb3_keys/cb3_saphire_relic_64.png")
-	medalicons["BRONZE"] = Material("cb3_keys/cb3_bronze_relic_64.png")
-	medalicons["OUTRO"] = Material("icon16/star.png")
-	
+	local medalicons = {} 
+
+	for _,v in pairs(DR.Medals) do
+		medalicons[v.name] = Material(v.icon)
+	end
 
 	hook.Add( "PostDrawTranslucentRenderables", "statsdisplay", function()
 	
@@ -594,14 +592,14 @@ if CLIENT then
 								local k = i-1
 								if i <= #DR.MapMedalsCache then
 									local v = DR.MapMedalsCache[i]
-									local t = string.upper(v["type"])
-									local reward = tostring(v["reward"])
+									local t = string.lower(v["type"])
+									local bonus = tostring(v["bonus"])
 
 									surface.SetDrawColor(255,255,255,255)
-									surface.SetMaterial(medalicons[t] or medalicons["OUTROS"])
+									surface.SetMaterial(medalicons[t] or medalicons["other"])
 									surface.DrawTexturedRect( -700, -150 + 100*k, 72, 72)
 									deathrunShadowTextSimple( t, "deathrun_3d2d_large", -600, -150 + 100*k, DR.Colors.Text.Clouds, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP, 2 )
-									deathrunShadowTextSimple( reward.." Pontos", "deathrun_3d2d_large", 0, -150 + 100*k, DR.Colors.Text.Clouds, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, 2 )
+									deathrunShadowTextSimple( bonus.." Pontos", "deathrun_3d2d_large", 0, -150 + 100*k, DR.Colors.Text.Clouds, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, 2 )
 									deathrunShadowTextSimple( string.ToMinutesSecondsMilliseconds(v["seconds"] or "0"), "deathrun_3d2d_large", 700, -150 + 100*k, DR.Colors.Text.Turq, TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP, 2 )
 
 									surface.SetDrawColor( DR.Colors.Turq )

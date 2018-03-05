@@ -29,12 +29,12 @@ if SERVER then
 		return tonumber(pmulti[1]["pmultiplier"])
 	end
 
-	function DR:RewardPlayer( ply, amt, reason )
+	function DR:RewardPlayer( ply, amt, reason, premium )
 		amt = amt or 0
 		if hasPointshop then
 			ply:PS_GivePoints( amt )
 			if PointshopRewardMessage:GetBool() then
-				ply:PS_Notify("Foram dados "..tostring( amt ).." Pontos a você por "..(reason or "jogar").."!")
+				ply:PS_Notify("Foram dados "..tostring( amt ).." pontos a você por "..(reason or "jogar").."!")
 			end
 		end
 		if hasRedactedHub then
@@ -53,7 +53,11 @@ if SERVER then
 		end
 		if hasPointshop2 then
 			--if PointshopRewardMessage:GetBool() then
-			ply:PS2_AddStandardPoints( amt, "You were given "..tostring( amt ).." points for "..(reason or "playing").."!", true)
+			if premium == true then
+			ply:PS2_AddPremiumPoints( amt, "Foram dadas "..tostring( amt ).." reliquias a você por "..(reason or "jogar").."!", true)
+			else
+			ply:PS2_AddStandardPoints( amt, "Foram dados "..tostring( amt ).." pontos a você por "..(reason or "jogar").."!", true)
+			end
 		end
 	end
 
@@ -62,8 +66,9 @@ if SERVER then
 		DR:RewardPlayer( ply, math.Round(PointshopFinishReward:GetInt()*#player.GetAllPlaying()*DR:GetMultiplier(ply),0), " terminar o mapa")
 	end)
 
-	hook.Add("DeathrunPlayerGetMedal", "PointshopReward", function (ply, type, reward)
-		DR:RewardPlayer( ply, math.Round(reward*#player.GetAllPlaying()*DR:GetMultiplier(ply),0), "obter a medalha de "..type.."!")
+	hook.Add("DeathrunPlayerGetMedal", "PointshopReward", function (ply, type, reward, bonus)
+		DR:RewardPlayer( ply, math.Round(tonumber(bonus)*#player.GetAllPlaying()*DR:GetMultiplier(ply),0), "obter a medalha de "..type.."!")
+		DR:RewardPlayer( ply, tonumber(reward), "obter a medalha de "..type.."!", true)
 	end)
 
 	hook.Add("PlayerDeath", "PointshopRewards", function( ply, inflictor, attacker )

@@ -19,7 +19,11 @@ local HudTheme = CreateClientConVar("deathrun_hud_theme", 0, true, false) -- dif
 local HudAlpha = CreateClientConVar("deathrun_hud_alpha", 255, true, false)
 
 
-local platmedal = Material("cb3_keys/cb3_platinum_relic_64.png")
+local icons = {
+	platmedal = Material(DR.Medals[1].icon),
+	saphiremedal = Material(DR.Medals[3].icon),
+	goldcoin = Material("currency/kip_16.png")
+}
 
 
 
@@ -39,7 +43,6 @@ local function IsRecordist( ply )
 	end
 	return false
 end
-
 
 hook.Add("HUDPaint","FixCHudAmmo", function()
 	if HudTheme:GetInt() == 2 then
@@ -226,9 +229,65 @@ function GM:HUDPaint()
 	end
 
 	DeathrunDrawKillfeed(ScrW()/2, ScrH()*0.666)
+	DR:DrawPointCounter(0, 8 + 8 + 228/2)
 
 end
 
+function DR:DrawPointCounter(x, y)
+
+	local ply = LocalPlayer()
+
+	if PS or Pointshop2 then
+
+		if PS then
+
+			local pts = ply:PS_GetPoints() or 0
+
+			local hrec = 24
+			local wrec = 24 + (9*string.len(tostring( pts )))
+
+			surface.SetDrawColor(turq)
+			surface.DrawRect(x,y,wrec, hrec)
+
+			surface.SetDrawColor(255,255,255,255)
+			surface.SetMaterial(icons.goldcoin)
+			surface.DrawTexturedRect(x+2,y+4,16,16)
+
+			deathrunShadowTextSimple( tostring( pts ), "deathrun_hud_Medium", wrec-4, y, DR.Colors.Text.Clouds, TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP, 1 )
+
+		end
+
+		if Pointshop2 then
+
+			local oldpremiumPts = premiumPts or ply.PS2_Wallet.premiumPoints
+			local premiumPts = (ply.PS2_Wallet ~= nil) and ply.PS2_Wallet.premiumPoints or 0
+
+			local wprec = 24 + (9*string.len(tostring( oldpremiumPts )))
+			local hrec = 24
+			local wrec = 24 + (9*string.len(tostring( oldpts )))
+
+			surface.SetDrawColor(turq)
+			surface.DrawRect(x,y,wrec, hrec)
+
+			surface.SetDrawColor(255,255,255,255)
+			surface.SetMaterial(icons.goldcoin)
+			surface.DrawTexturedRect(x+2,y+4,16,16)
+
+			deathrunShadowTextSimple( tostring( oldpts ), "deathrun_hud_Medium", wrec-4, y, DR.Colors.Text.Clouds, TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP, 1 )
+
+			surface.SetDrawColor(turq)
+			surface.DrawRect(x,y + 24 + 4,wprec, hrec)
+
+			surface.SetDrawColor(255,255,255,255)
+			surface.SetMaterial(icons.saphiremedal)
+			surface.DrawTexturedRect(x,y + 1 + 24 + 4,20,20)
+
+			deathrunShadowTextSimple( tostring( premiumPts ), "deathrun_hud_Medium", wprec-4, y + 24 + 4, DR.Colors.Text.Clouds, TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP, 1 )
+
+		end
+	end
+
+end
 
 function DR:DrawCrosshair( x, y )
 	local thick = XHairThickness:GetInt()
@@ -430,7 +489,7 @@ function DR:DrawPlayerHUD( x, y )
 		deathrunShadowTextSimple( "2x PONTOS", "deathrun_hud_Medium", dx + 75 + 4 + (228 - 75 - 4)/2,  dy + 32/2, clouds, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 
 		surface.SetDrawColor(255,255,255,255)
-		surface.SetMaterial(platmedal)
+		surface.SetMaterial(icons.platmedal)
 		surface.DrawTexturedRect(dx + 288 - 75 - 16, dy, 32 , 32)
 
 
@@ -839,7 +898,7 @@ function DR:DrawPlayerHUDSass( x, y )
 		deathrunShadowTextSimple( "2x Pontos", "deathrun_hud_Medium", x+w/2+18,y + h/2 + 48, Color(255,255,255,255), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
 
 		surface.SetDrawColor(255,255,255,alpha)
-		surface.SetMaterial(platmedal)
+		surface.SetMaterial(icons.platmedal)
 		surface.DrawTexturedRect(x+w - 24,y + h/2 + 42+1, 16 , 16)
 		--surface.DrawTexturedRect(x + w/2 - 12,y + h/2 + 42+1, 16 , 16)
 		
@@ -1081,7 +1140,7 @@ function DR:DrawPlayerHUDAdvanced( x, y )
 			deathrunShadowTextSimple( "2x PONTOS", "deathrun_hud_Medium", dx + 75 + 4 + (228 - 75 - 4)/2,  dy + 32/2, clouds, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 
 			surface.SetDrawColor(255,255,255,255)
-			surface.SetMaterial(platmedal)
+			surface.SetMaterial(icons.platmedal)
 			surface.DrawTexturedRect(dx + 75 + 4, dy, 32 , 32)
 			surface.DrawTexturedRect(dx + 288 - 75 - (32/2), dy, 32 , 32)
 			

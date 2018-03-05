@@ -685,13 +685,15 @@ hook.Add("SetupMove", "DeathrunIdleCheck", function( ply, mv )
 end)
 
 local plyafk = {}
-timer.Create("SimpleAfkChecker",0.95,0,function()
+timer.Create("SimpleAfkChecker",1,0,function()
 	for k, v in pairs(player.GetAll()) do
 		plyafk[v] = plyafk[v] or {}
 		local oldangs = plyafk[v][2] or v:EyeAngles()
+		local oldpos = plyafk[v][4] or v:GetPos()
 		plyafk[v][1] = plyafk[v][1] or CurTime()
 		plyafk[v][2] = v:EyeAngles()
-		if plyafk[v][2] ~= oldangs then
+		plyafk[v][4] = v:GetPos()
+		if (plyafk[v][2] ~= oldangs) or (plyafk[v][4] ~= oldpos) or (v:IsTyping()~=false) then
 			plyafk[v][1] = CurTime()
 		end
 		plyafk[v][3] = CurTime() - plyafk[v][1]
@@ -701,22 +703,22 @@ end)
 
 function DR:CheckIdleTime( ply ) -- return how long the player has been idle for
 
-return plyafk[ply][3] or 0 -- hotfix to prevent autokick after 22-02-2016 update
-	-- ply.LastActiveTime = ply.LastActiveTime or CurTime()
-	-- return CurTime() - ply.LastActiveTime
+return plyafk[ply] and plyafk[ply][3] or 0
 end
 local IdleTimer = CreateConVar("deathrun_idle_kick_time", 60, defaultFlags, "How many seconds each to wait before speccing idle players.")
 timer.Create("CheckIdlePlayers", 1, 0, function()
 	for k, ply in ipairs(player.GetAllPlaying()) do -- don't kick afk spectators or bots
+		local tim = (ply:Team() == TEAM_RUNNER) and (IdleTimer:GetInt()*2) or (IdleTimer:GetInt())
+		--print(tim)
 		--print( ply:Nick(), DR:CheckIdleTime( ply ) )
-		if math.floor(DR:CheckIdleTime( ply )) == math.floor(IdleTimer:GetInt() - 15) then
-			ply:DeathrunChatPrint("Se você não se mover em 15 segundos você será movido para os espectadores")
+		if math.floor(DR:CheckIdleTime( ply )) == math.floor(tim - ((tim/5)*2)) then
+			ply:DeathrunChatPrint("Se você não se mover em "..math.floor(tim) - math.floor(DR:CheckIdleTime( ply )).." segundos você será movido para os espectadores")
 		end
-		if DR:CheckIdleTime( ply ) > IdleTimer:GetInt() and ply:SteamID() ~= "BOT" and (ply:GetObserverMode() == OBS_MODE_NONE) then
+		if DR:CheckIdleTime( ply ) > tim and ply:SteamID() ~= "BOT" and (ply:GetObserverMode() == OBS_MODE_NONE) then
 			ply:ConCommand("deathrun_spectate_only 1")
 			net.Start("DeathrunSpectatorNotification")
 			net.Send( ply )
-			DR:ChatBroadcast( ply:Nick().." was specced for being idle too long." )
+			DR:ChatBroadcast( ply:Nick().." foi movido para os espectadores por ficar AFK por muito tempo. ("..math.floor(tim).." segundos)" )
 		end
 	end
 end)
